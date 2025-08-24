@@ -1,0 +1,66 @@
+receivers:
+  - name: 'discord-general'
+    slack_configs:
+      - api_url: 'https://discord.com/api/webhooks/1408879360106172498/DsYk5FTHI3qDaAbt27qWjm6byrlstVtSYWL_jWtSr5TsOInXmNWSRq72pjMBKFdvug3h/slack'
+        send_resolved: true
+        username: 'Monitoring Bot'
+        text: |-
+          📊 **Alerte Monitoring**
+          {{ range .Alerts }}
+          {{ .Annotations.summary }}
+          {{ .Annotations.description }}
+          Service: {{ .Labels.job }}
+          Gravité: {{ .Labels.severity }}
+          {{ end }}
+
+  - name: 'discord-critical'
+    slack_configs:
+      - api_url: 'https://discord.com/api/webhooks/1408879360106172498/DsYk5FTHI3qDaAbt27qWjm6byrlstVtSYWL_jWtSr5TsOInXmNWSRq72pjMBKFdvug3h/slack'
+        send_resolved: true
+        username: 'Alert Bot'
+        text: |-
+          🚨 **ALERTE CRITIQUE**
+          {{ range .Alerts }}
+          {{ .Annotations.summary }}
+          {{ .Annotations.description }}
+          Service: {{ .Labels.job }}
+          {{ end }}
+
+  - name: 'discord-technical'
+    slack_configs:
+      - api_url: 'https://discord.com/api/webhooks/1408879360106172498/DsYk5FTHI3qDaAbt27qWjm6byrlstVtSYWL_jWtSr5TsOInXmNWSRq72pjMBKFdvug3h/slack'
+        send_resolved: true
+        username: 'Tech Bot'
+        text: |-
+          🔧 **Alerte Technique**
+          {{ range .Alerts }}
+          {{ .Annotations.summary }}
+          {{ .Annotations.description }}
+          Service: {{ .Labels.job }}
+          {{ end }}
+
+  - name: 'discord-business'
+    slack_configs:
+      - api_url: 'https://discord.com/api/webhooks/1408879360106172498/DsYk5FTHI3qDaAbt27qWjm6byrlstVtSYWL_jWtSr5TsOInXmNWSRq72pjMBKFdvug3h/slack'
+        send_resolved: true
+        username: 'Business Bot'
+        text: |-
+          💼 **Alerte Métier**
+          {{ range .Alerts }}
+          {{ .Annotations.summary }}
+          {{ .Annotations.description }}
+          Service: {{ .Labels.job }}
+          {{ end }}
+
+  - name: 'discord-warning'
+    slack_configs:
+      - api_url: 'https://discord.com/api/webhooks/1408879360106172498/DsYk5FTHI3qDaAbt27qWjm6byrlstVtSYWL_jWtSr5TsOInXmNWSRq72pjMBKFdvug3h/slack'
+        send_resolved: true
+        username: 'Warning Bot'
+        text: |-
+          ⚠️ **Avertissement**
+          {{ range .Alerts }}
+          {{ .Annotations.summary }}
+          {{ .Annotations.description }}
+          Service: {{ .Labels.job }}
+          {{ end }}

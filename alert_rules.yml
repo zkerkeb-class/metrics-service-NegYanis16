@@ -1,0 +1,114 @@
+groups:
+  # ========================================
+  # ALERTES TECHNIQUES
+  # ========================================
+  - name: technical_alerts
+    rules:
+      # 1. Service indisponible (up == 0)
+      - alert: ServiceIndisponible
+        expr: up == 0
+        for: 0s  # Alerte immédiate
+        labels:
+          severity: critical
+          category: technique
+        annotations:
+          summary: "🚨 Service {{ $labels.job }} indisponible"
+          description: "Le service {{ $labels.job }} ne répond plus (up == 0)"
+
+      # 2. Taux d'erreurs HTTP > 10% sur 5 minutes
+      - alert: TauxErreurHTTPEleve
+        expr: (rate(http_requests_total{status_code=~"5.."}[5m]) / rate(http_requests_total[5m])) * 100 > 10
+        for: 0s  # Dès que le seuil est dépassé
+        labels:
+          severity: critical
+          category: technique
+        annotations:
+          summary: "🚨 Taux d'erreur HTTP élevé sur {{ $labels.job }}"
+          description: "{{ $labels.job }} a {{ $value | printf \"%.1f\" }}% d'erreurs HTTP sur les 5 dernières minutes (seuil: 10%)"
+
+      # 3. Temps de réponse moyen > 2 secondes
+      - alert: TempsReponseEleve
+        expr: (rate(http_request_duration_seconds_sum[5m]) / rate(http_request_duration_seconds_count[5m])) > 2
+        for: 1m
+        labels:
+          severity: warning
+          category: technique
+        annotations:
+          summary: "⚠️ Temps de réponse élevé sur {{ $labels.job }}"
+          description: "{{ $labels.job }} a un temps de réponse moyen de {{ $value | printf \"%.2f\" }}s (seuil: 2s)"
+
+      # 4. CPU > 80%
+      - alert: CPUEleve
+        expr: process_cpu_usage_percent > 80
+        for: 2m
+        labels:
+          severity: warning
+          category: technique
+        annotations:
+          summary: "⚠️ Utilisation CPU élevée sur {{ $labels.job }}"
+          description: "{{ $labels.job }} utilise {{ $value | printf \"%.1f\" }}% de CPU (seuil: 80%)"
+
+  # ========================================
+  # ALERTES MÉTIER
+  # ========================================
+  - name: business_alerts
+    rules:
+      # 1. Trop d'échecs de connexion (suspicion d'attaque ou bug)
+      - alert: EchecsConnexionSuspects
+        expr: rate(auth_attempts_total{method="login",success="false"}[2m]) > 0.5  # Plus de 30 échecs par minute
+        for: 1m
+        labels:
+          severity: critical
+          category: metier
+        annotations:
+          summary: "🚨 Pic d'échecs de connexion suspect"
+          description: "{{ $value | humanize }} échecs de connexion par seconde détectés - Possible attaque ou bug (seuil: 0.5/s)"
+
+      # 2. Taux d'erreur élevé sur l'IA (OpenAI indisponible)
+      - alert: IAIndisponible
+        expr: (rate(openai_requests_total{status="error"}[5m]) / rate(openai_requests_total[5m])) * 100 > 20
+        for: 1m
+        labels:
+          severity: critical
+          category: metier
+        annotations:
+          summary: "🚨 Service IA défaillant"
+          description: "{{ $value | printf \"%.1f\" }}% des requêtes OpenAI échouent - Service IA potentiellement indisponible (seuil: 20%)"
+
+      # 3. Transactions de paiement échouées
+      - alert: PaiementsEchoues
+        expr: (rate(http_requests_total{job="payment-service",status_code=~"4..|5.."}[5m]) / rate(http_requests_total{job="payment-service"}[5m])) * 100 > 5
+        for: 1m
+        labels:
+          severity: critical
+          category: metier
+        annotations:
+          summary: "🚨 Échecs de paiement détectés"
+          description: "{{ $value | printf \"%.1f\" }}% des transactions de paiement échouent (seuil: 5%)"
+
+  # ========================================
+  # ALERTES COMPLÉMENTAIRES
+  # ========================================
+  - name: additional_alerts
+    rules:
+      # Mémoire élevée
+      - alert: MemoireElevee
+        expr: (process_memory_usage_bytes / 1024 / 1024) > 512  # Plus de 512MB
+        for: 5m
+        labels:
+          severity: warning
+          category: technique
+        annotations:
+          summary: "⚠️ Utilisation mémoire élevée sur {{ $labels.job }}"
+          description: "{{ $labels.job }} utilise {{ $value | printf \"%.0f\" }}MB de mémoire (seuil: 512MB)"
+
+      # Quiz prenant trop de temps
+      - alert: QuizTropLents
+        expr: (rate(quiz_generation_duration_seconds_sum{type="quiz_generation"}[5m]) / rate(quiz_generation_duration_seconds_count{type="quiz_generation"}[5m])) > 15
+        for: 2m
+        labels:
+          severity: warning
+          category: metier
+        annotations:
+          summary: "⚠️ Génération de quiz lente"
+          description: "La génération de quiz prend en moyenne {{ $value | printf \"%.1f\" }}s (seuil: 15s)"
